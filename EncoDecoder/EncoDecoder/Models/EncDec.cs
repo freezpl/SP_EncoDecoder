@@ -13,7 +13,52 @@ namespace EncoDecoder.Models
 {
     public class EncDec : INotifyPropertyChanged
     {
-        public string Msg { get; set; }
+        bool isEncrypting;
+        public bool IsEncrypting
+        {
+            get { return isEncrypting; }
+            set
+            {
+                isEncrypting = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsEncrypting)));
+            }
+        }
+
+        bool isDescripting;
+        public bool IsDescripting
+        {
+            get { return isDescripting; }
+            set
+            {
+                isDescripting = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDescripting)));
+            }
+        }
+
+        FileStream fs;
+        int startPoint;
+
+        int partSize;
+        public int PartSize
+        {
+            get { return partSize; }
+            set
+            {
+                partSize = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PartSize)));
+            }
+        }
+
+        string pass;
+        public string Pass
+        {
+            get { return pass; }
+            set
+            {
+                pass = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Pass)));
+            }
+        }
 
         long progMax;
         public long ProgMax
@@ -22,7 +67,6 @@ namespace EncoDecoder.Models
             {
                 return progMax;
             }
-
             set
             {
                 progMax = value;
@@ -45,52 +89,75 @@ namespace EncoDecoder.Models
 
         public EncDec()
         {
-            OpenFileDialog od = new OpenFileDialog();
-            if (od.ShowDialog() == true)
-            {
-
-                FileStream fs = File.OpenRead(od.FileName);
-
-                byte[] arr = new byte[fs.Length];
-                ProgMax = fs.Length;
-
-                byte[] buffer = new byte[1];
-                Thread th = new Thread(() =>
-                {
-                    for (int i = 0; i < fs.Length; i++)
-                    {
-                        fs.Read(buffer, 0, 1);
-                        arr[i] = buffer[0];
-                        ProgVal = i;
-                    }
-
-                    //string str = "";
-                    //foreach (var i in arr)
-                    //{
-                    //    str += i.ToString() + " ";
-                    //}
-                    MessageBox.Show("ok!");
-                });
-                th.IsBackground = true;
-                th.Start();
-
-                //fs.Read(arr, 0, arr.Length);
-
-                //string str = "";
-                //foreach (var i in arr)
-                //{
-                //    str += i.ToString() + " ";
-                //}
-                //MessageBox.Show(str);
-            }
-
-            //algorythm
-            //char ch = ' ';
-            //char ch2 = 'q';
-            //char res = Convert.ToChar(ch ^ ch2);
-            //char ch3 = Convert.ToChar(res ^ ch2);   
+            PartSize = 4096;
+            Pass = "abc";
+            ProgMax = 100;
+            ProgVal = 0;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        //commands
+        AppCommand encryptCmd;
+        public AppCommand EncryptCmd
+        {
+            get
+            {
+                return encryptCmd ?? (encryptCmd = new AppCommand((o) =>
+                {
+                    if (isEncrypting)
+                    {
+                        MessageBox.Show("Encripting is alredy running", "Warning!", MessageBoxButton.OK, MessageBoxImage.None);
+                        return;
+                    }
+                    if (isDescripting)
+                    {
+                        MessageBox.Show("Now running description!\nWait to finish or abort description first!",
+                            "Warning!", MessageBoxButton.OK, MessageBoxImage.None);
+                        return;
+                    }
+
+                    OpenFileDialog ofd = new OpenFileDialog();
+                    if (ofd.ShowDialog() != true)
+                        return;
+
+                    Task t = new Task(() => {
+
+                        try
+                        {
+                            using (fs = new FileStream(ofd.FileName, FileMode.Open, FileAccess.ReadWrite))
+                            {
+                                long size = (fs.Length - startPoint < PartSize) ? fs.Length - startPoint : PartSize;
+                                byte[] buffer = new byte[size];
+                                fs.Read(buffer, startPoint, buffer.Length);
+
+                                int cursor = 0;
+                                for (int i = 0; i < buffer.Length; i++)
+                                {
+                                    buffer[i] ^= Convert.ToByte(Pass[cursor]);
+                                    //cursor++;
+                                    //if (cursor >= Pass.Length)
+                                    //    cursor = 0;
+                                }
+                                fs.Seek(startPoint, SeekOrigin.Begin);
+                                fs.Write(buffer, startPoint, buffer.Length);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBox.Show(e.Message, "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+                    });
+
+                    t.Start();
+     
+                }));
+            }
+        }
+
+        void Encrypting()
+        {
+        }
     }
 }
