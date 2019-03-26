@@ -6,8 +6,14 @@
         xmlns:local="clr-namespace:EncoDecoder"
         xmlns:Metro="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" Closing="MetroWindow_Closing">
+    <!--<i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction  Command="{Binding ExitCmd}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>-->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
@@ -26,7 +32,16 @@
                 <Button.Content >
                     <WrapPanel>
                         <fa:ImageAwesome Icon="Cog" Spin="{Binding IsEncrypting}" SpinDuration="5" Foreground="Red" Margin="5"/>
-                        <TextBlock VerticalAlignment="Center">ENCRYPT</TextBlock>
+                        <TextBlock VerticalAlignment="Center">ENCRYPT/DESCRIPT</TextBlock>
+                    </WrapPanel>
+                </Button.Content>
+            </Button>
+
+            <Button Grid.Column="1" Command="{Binding AbortCmd}">
+                <Button.Content >
+                    <WrapPanel>
+                        <fa:ImageAwesome Icon="Remove" SpinDuration="5" Foreground="Red" Margin="5"/>
+                        <TextBlock VerticalAlignment="Center">ABORT</TextBlock>
                     </WrapPanel>
                 </Button.Content>
             </Button>

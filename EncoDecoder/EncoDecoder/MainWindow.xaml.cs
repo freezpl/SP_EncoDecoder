@@ -22,11 +22,30 @@ namespace EncoDecoder
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
+        EncDec ed;
         public MainWindow()
         {
             InitializeComponent();
 
-            DataContext = new EncDec();
+            ed = new EncDec();
+            DataContext = ed;
+        }
+
+        private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            //if (ed.IsEncrypting)
+            {
+                MessageBoxResult result = MessageBox.Show("Really close?", 
+                    "Warning", MessageBoxButton.YesNo);
+                if (result != MessageBoxResult.Yes)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    ed.ExitAndSave();
+                }
+            }
         }
     }
 }
