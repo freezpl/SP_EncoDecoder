@@ -7,16 +7,13 @@
         xmlns:Metro="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:qc="http://QuickConverter.CodePlex.com/"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Closing="MetroWindow_Closing">
-    <!--<i:Interaction.Triggers>
-        <i:EventTrigger EventName="Closing">
-            <i:InvokeCommandAction  Command="{Binding ExitCmd}" />
-        </i:EventTrigger>
-    </i:Interaction.Triggers>-->
+        Title="{Binding Path}" Height="150" Width="800" Closing="MetroWindow_Closing" 
+                   MinWidth="800">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="60"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
@@ -28,41 +25,71 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
-            <Button Command="{Binding EncryptCmd}">
-                <Button.Content >
+            <Rectangle Grid.ColumnSpan="4" Fill="Teal"/>
+
+            <Button HorizontalContentAlignment="Stretch" Margin="5" Background="#FFE9FFFB"
+                Command="{Binding EncryptCmd}" IsEnabled="{qc:Binding '!$P', P={Binding IsEncrypting}}">
+                <Button.Content>
                     <WrapPanel>
-                        <fa:ImageAwesome Icon="Cog" Spin="{Binding IsEncrypting}" SpinDuration="5" Foreground="Red" Margin="5"/>
-                        <TextBlock VerticalAlignment="Center">ENCRYPT/DESCRIPT</TextBlock>
+                        <fa:ImageAwesome Icon="Cog" Spin="{Binding IsEncrypting}" SpinDuration="5" Foreground="Teal" Margin="2 2 15 2"/>
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="12">ENCRYPT/DESCRIPT</TextBlock>
                     </WrapPanel>
                 </Button.Content>
             </Button>
 
-            <Button Grid.Column="1" Command="{Binding AbortCmd}">
+            <Button Grid.Column="1" Command="{Binding AbortCmd}" Background="#FFE9FFFB" HorizontalContentAlignment="Stretch" Margin="5"
+                    IsEnabled="{qc:Binding '!$P', P={Binding IsAborting}}">
                 <Button.Content >
                     <WrapPanel>
-                        <fa:ImageAwesome Icon="Remove" SpinDuration="5" Foreground="Red" Margin="5"/>
-                        <TextBlock VerticalAlignment="Center">ABORT</TextBlock>
+                        <fa:ImageAwesome Icon="Remove" SpinDuration="5" Foreground="#FFFF3C3C" Margin="3 3 15 3"/>
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="12">ABORT</TextBlock>
                     </WrapPanel>
                 </Button.Content>
             </Button>
 
-            <WrapPanel Grid.Column="2">
-                <fa:ImageAwesome Icon="PuzzlePiece" Margin="10"/>
-                <TextBlock Text="Part Size:"/>
-                <Metro:NumericUpDown Value="{Binding PartSize}" Minimum="1"/>
-                <TextBlock Text="bytes"/>
-            </WrapPanel>
-
-            <WrapPanel Grid.Column="3">
-                <fa:ImageAwesome Icon="Key" Margin="10"/>
-                <TextBlock Text="Key:"/>
-                <TextBox Text="{Binding Pass}"/>
-                <TextBlock Text="bytes"/>
-            </WrapPanel>
+            <Grid Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="3">
+                    <TextBlock Text="Part Size:" FontSize="11" HorizontalAlignment="Center" 
+                               Foreground="White"/>
+                    <fa:ImageAwesome Icon="PuzzlePiece" Margin="5 2" Foreground="#FFC3FFF1"/>
+                </StackPanel>
+                <Metro:NumericUpDown Grid.Column="1" Value="{Binding PartSize}" Minimum="1" 
+                                     Margin="10" FontSize="14"
+                                     IsEnabled="{qc:Binding '!$P', P={Binding IsWork}}"/>
+                
+            </Grid>
+            
+            <Grid Grid.Column="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="3">
+                    <TextBlock Text="Key" FontSize="11" HorizontalAlignment="Center"
+                               Foreground="White"/>
+                    <fa:ImageAwesome Icon="Key" Margin="5 2" Foreground="#FFC3FFF1"/>
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding Pass}" Margin="10"
+                         VerticalContentAlignment="Center" FontSize="14"
+                         HorizontalAlignment="Stretch"
+                         IsEnabled="{qc:Binding '!$P', P={Binding IsWork}}"/>
+            </Grid>
 
         </Grid>
 
         <!--<TextBlock Grid.Row="1" Text="{Binding Msg}" />-->
-        <ProgressBar Grid.Row="1" Maximum="{Binding ProgMax}" Value="{Binding ProgVal}" />
+        <ProgressBar Grid.Row="1" Maximum="{Binding ProgMax}" Value="{Binding ProgVal}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseEnter">
+                    <i:InvokeCommandAction Command="{Binding SpeedCmd}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </ProgressBar>
     </Grid>
 </Metro:MetroWindow>
