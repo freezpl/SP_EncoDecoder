@@ -33,7 +33,7 @@ namespace EncoDecoder
 
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            //if (ed.IsEncrypting)
+            if (ed.IsEncrypting)
             {
                 MessageBoxResult result = MessageBox.Show("Really close?", 
                     "Warning", MessageBoxButton.YesNo);

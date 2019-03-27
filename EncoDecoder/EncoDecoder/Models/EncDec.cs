@@ -101,6 +101,11 @@ namespace EncoDecoder.Models
             }
         }
 
+        //register data
+        const string PROGRAM_NAME = "Encodecoder";
+        RegistryKey userKey;
+        RegistryKey programKey;
+
         public EncDec()
         {
             Path = "";
@@ -108,6 +113,31 @@ namespace EncoDecoder.Models
             Pass = "abc";
             ProgMax = 4096;
             ProgVal = 0;
+
+            
+            userKey = Registry.CurrentUser;
+            if(userKey != null)
+            {
+                programKey =  userKey.OpenSubKey(PROGRAM_NAME);
+                if (programKey != null)
+                {
+                    MessageBox.Show(programKey.Name);
+
+                }
+            }
+        }
+        
+        public void ExitAndSave()
+        {
+            if (userKey == null)
+                return;
+
+            if (programKey == null)
+                programKey = userKey.CreateSubKey(PROGRAM_NAME);
+            
+            programKey.SetValue(nameof(path), path);
+            programKey.SetValue(nameof(startPoint), startPoint);
+            programKey.SetValue(nameof(isEncrypting), isEncrypting);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -140,6 +170,7 @@ namespace EncoDecoder.Models
                             {
                                 IsEncrypting = true;
                                 ProgMax = fs.Length;
+
                                 while (startPoint < fs.Length)
                                 {
                                     if (cts.Token.IsCancellationRequested)
@@ -167,6 +198,7 @@ namespace EncoDecoder.Models
                                     ProgVal = startPoint;
                                     
                                 }
+                                MessageBox.Show("The work is complete!");
                                 IsEncrypting = false;
                                 startPoint = 0;
                                 Path = string.Empty;
@@ -248,14 +280,6 @@ namespace EncoDecoder.Models
                     t.Start();
                 }));
             }
-        }
-
-        public void ExitAndSave()
-        {
-            RegistryKey curUserKey = Registry.CurrentUser;
-            RegistryKey encDeskKey = curUserKey.CreateSubKey("EncrDescr");
-            encDeskKey.SetValue("path", path);
-            encDeskKey.SetValue("start", startPoint);
         }
 
         void Encrypting()
