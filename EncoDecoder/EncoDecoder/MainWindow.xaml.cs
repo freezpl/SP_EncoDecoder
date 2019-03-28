@@ -35,7 +35,7 @@ namespace EncoDecoder
         {
             if (ed.IsEncrypting)
             {
-                MessageBoxResult result = MessageBox.Show("Really close?", 
+                MessageBoxResult result = MessageBox.Show("Program is coding now!\nIf you close you can continue coding after next launch program. Close now?", 
                     "Warning", MessageBoxButton.YesNo);
                 if (result != MessageBoxResult.Yes)
                 {
@@ -44,6 +44,15 @@ namespace EncoDecoder
                 else
                 {
                     ed.ExitAndSave();
+                }
+            }
+            if (ed.IsAborting)
+            {
+                MessageBoxResult result = MessageBox.Show("Now program aborting changes!\n If you close, your source file will be damagged? Close program?",
+                    "Warning", MessageBoxButton.YesNo);
+                if (result != MessageBoxResult.Yes)
+                {
+                    e.Cancel = true;
                 }
             }
         }

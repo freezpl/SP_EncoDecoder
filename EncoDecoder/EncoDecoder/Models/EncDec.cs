@@ -114,36 +114,60 @@ namespace EncoDecoder.Models
 
         public EncDec()
         {
-            Path = "";
-            PartSize = 4096;
-            Pass = "abc";
+            Path = "Encript/Descriptor";
+            PartSize = 100;
+            Pass = "querty";
             ProgMax = 4096;
             ProgVal = 0;
 
 
-            //userKey = Registry.CurrentUser;
-            //if(userKey != null)
-            //{
-            //    programKey =  userKey.OpenSubKey(PROGRAM_NAME);
-            //    if (programKey != null)
-            //    {
-            //        MessageBox.Show(programKey.Name);
+            userKey = Registry.CurrentUser;
+            if(userKey != null)
+            {
+                programKey =  userKey.OpenSubKey(PROGRAM_NAME);
+                if (programKey != null)
+                {
+                    MessageBoxResult  res = MessageBox.Show("You have unfinished task! \nFile: " + 
+                        programKey.GetValue(nameof(Path)) + "Continue?", "Unfinished task", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if(res == MessageBoxResult.Yes)
+                    {
+                        Path = programKey.GetValue(nameof(Path)).ToString();
+                        startPoint = Convert.ToInt64(programKey.GetValue(nameof(startPoint)));
 
-            //    }
-            //}
+                        IsEncrypting = true;
+                        Encrypting();
+                    }
+                programKey.Close();
+                }
+            }
         }
 
         public void ExitAndSave()
         {
-            //if (userKey == null)
-            //    return;
+            if (userKey == null)
+                return;
 
-            //if (programKey == null)
-            //    programKey = userKey.CreateSubKey(PROGRAM_NAME);
+            if (programKey == null)
+                programKey = userKey.CreateSubKey(PROGRAM_NAME);
 
-            //programKey.SetValue(nameof(path), path);
-            //programKey.SetValue(nameof(startPoint), startPoint);
-            //programKey.SetValue(nameof(isEncrypting), isEncrypting);
+            programKey.SetValue(nameof(path), path);
+            programKey.SetValue(nameof(startPoint), startPoint);
+        }
+
+
+        DateTime startTime;
+        public string ProgTip
+        {
+            get
+            {
+                if(isEncrypting || IsAborting)
+                {
+                    TimeSpan tp = DateTime.Now - startTime; 
+                    return (Convert.ToInt32(startPoint / tp.Seconds/1000)).ToString() + " Kbit/s";
+                }
+                else
+                return "Not work";
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -195,46 +219,10 @@ namespace EncoDecoder.Models
 
                     cts.Cancel();
                     t.Wait();
-
-                    //t = new Task(() =>
-                    //{
-                    //    try
-                    //    {
-                    //        using (fs = new FileStream(Path, FileMode.Open, FileAccess.ReadWrite))
-                    //        {
-                    //            long length = startPoint;
-                    //            ProgMax = fs.Length;
-                    //            startPoint = 0;
-                    //            while (startPoint < length)
-                    //            {
-                    //                long size = (length - startPoint < PartSize) ? length - startPoint : PartSize;
-                    //                byte[] buffer = new byte[size];
-                    //                fs.Read(buffer, 0, buffer.Length);
-
-                    //                int cursor = 0;
-                    //                for (int i = 0; i < buffer.Length; i++)
-                    //                {
-                    //                    buffer[i] ^= Convert.ToByte(Pass[cursor]);
-                    //                    cursor++;
-                    //                    if (cursor >= Pass.Length)
-                    //                        cursor = 0;
-                    //                }
-                    //                fs.Seek(startPoint, SeekOrigin.Begin);
-                    //                fs.Write(buffer, 0, buffer.Length);
-                    //                startPoint = fs.Position;
-                    //                ProgVal = length - startPoint;
-                    //            }
-                    //            startPoint = 0;
-                    //            MessageBox.Show("Restore complete!");
-                    //        }
-                    //    }
-                    //    catch (Exception e)
-                    //    {
-                    //        MessageBox.Show(e.Message + "\n" + e.StackTrace, "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
-                    //        return;
-                    //    }
-                    //});
-                    //t.Start();
+                    
+                   
+                    isAborting = true;
+                    Encrypting();
                 }));
             }
         }
@@ -250,7 +238,7 @@ namespace EncoDecoder.Models
                     {
                         ProgMax = fs.Length;
                         long codeLenght;
-
+                        startTime = DateTime.Now;
                         if (IsEncrypting)
                         {
                             codeLenght = fs.Length;
@@ -258,12 +246,15 @@ namespace EncoDecoder.Models
                         else
                         {
                             codeLenght = startPoint;
+                            startPoint = 0;
                         }
                         while (startPoint < codeLenght)
                         {
                             if (cts.Token.IsCancellationRequested)
                             {
                                 fs = null;
+                                if (IsEncrypting)
+                                    IsEncrypting = false;
                                 return;
                             }
 
@@ -282,14 +273,21 @@ namespace EncoDecoder.Models
                             fs.Seek(startPoint, SeekOrigin.Begin);
                             fs.Write(buffer, 0, buffer.Length);
                             startPoint = fs.Position;
-                            ProgVal = startPoint;
-
+                            ProgVal = (isEncrypting) ? startPoint : codeLenght - startPoint;
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ProgTip)));
                         }
 
                         MessageBox.Show("The work is complete!");
+                        Path = "Encript/Descriptor";
+
+
+                        if (userKey != null && programKey != null)
+                            userKey.DeleteSubKey(PROGRAM_NAME, false);
 
                         if (IsEncrypting)
                             IsEncrypting = false;
+                        else
+                            IsAborting = false;
 
                         startPoint = 0;
                         Path = string.Empty;
@@ -304,7 +302,7 @@ namespace EncoDecoder.Models
 
             t.Start();
         }
-
+        
         AppCommand speedCmd;
         public AppCommand SpeedCmd
         {
@@ -312,12 +310,9 @@ namespace EncoDecoder.Models
             {
                 return speedCmd ?? (speedCmd = new AppCommand((o) =>
                 {
-                    MessageBox.Show("Speed");
+                   // MessageBox.Show("Speed");
                 }));
             }
         }
-
-        public void DDD() { }
-
     }
 }
